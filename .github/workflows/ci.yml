@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24]
+    env:
+      SEMANTIC_INDEX_TEST_CACHE_DIR: ${{ github.workspace }}/../model-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - name: Cache model
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/../model-cache
+          key: model-Xenova-all-MiniLM-L6-v2-751bff37182d3f1213fa05d7196b954e230abad9-q8
+      - run: npm run test:model
+      - run: npm run test:e2e
+      - name: Packed tarball install smoke test
+        run: node scripts/pack-smoke.mjs
+        env:
+          SEMANTIC_INDEX_CACHE_DIR: ${{ github.workspace }}/../model-cache

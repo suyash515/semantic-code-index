@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+/.semantic-index/
+
+semantic-code-index-specification.md
